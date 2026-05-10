@@ -69,14 +69,10 @@ def register_user(u, p):
 
 def check_user(u, p):
     h = hashlib.sha256(p.encode()).hexdigest()
-    # ТВОЯ НОВАЯ СТРОЧКА: если логин '123', ты всегда админ!
-    if u == '123': return 'admin' 
-    
     conn = sqlite3.connect("users.db")
     res = conn.execute("SELECT role FROM users WHERE username=? AND password_hash=?", (u, h)).fetchone()
     conn.close()
-    return res if res else None
-
+    return res[0] if res else None
 
 def create_group(group_name, creator):
     conn = sqlite3.connect("users.db")
@@ -133,9 +129,18 @@ def get_time(): return datetime.now().strftime("%H:%M")
 # --- 2. ВЕБ-ИНТЕРФЕЙС ---
 async def web_main():
     global online_users, banned_users
-    set_env(title="🌊Frutiger Chat", output_animation=False)
+    set_env(title="Frutiger Chat 🌊", output_animation=False)
+    
+    # --- ЗАГРУЗКА ЛОГОТИПА ---
+    logo_base64 = ""
+    if os.path.exists("logo.png"):
+        with open("logo.png", "rb") as f:
+            logo_base64 = base64.b64encode(f.read()).decode()
 
+    # Музыкальный блок (оставляем как был)
     music_base64 = ""
+    # ... твой код с музыкой ...
+
     if os.path.exists("music.mp3"):
         with open("music.mp3", "rb") as f:
             music_base64 = base64.b64encode(f.read()).decode()
@@ -212,7 +217,17 @@ async def web_main():
         last_count = -1
         while True:
             with use_scope('sidebar', clear=True):
-                put_html(f'<b> Frutiger Chat</b><br><small>{nickname} ({user_role})</small><hr>')
+            # --- КРУГЛЫЙ ЛОГОТИП (ОБРЕЗАЕМ БЕЛЫЕ УГЛЫ) ---
+                if logo_base64:
+                    put_html(f'''
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <img src="data:image/png;base64,{logo_base64}" 
+                                style="width: 100px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                        </div>
+                ''')
+
+            
+                put_html(f"<b>{nickname}</b><br><small>Статус: {user_role}</small><hr>")
                 put_button(" Общий чат", onclick=lambda: change_chat("Общий чат"), small=True, outline=(current_chat != "Общий чат")).style('width:100%;')
                 put_html('<br><b> 👥Группы:</b>')
                 for g in get_user_groups(nickname):
